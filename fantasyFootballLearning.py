@@ -59,7 +59,7 @@ for pos in positions:
     dataFrames = []
     players, teams = getPlayerNames(pos)
     
-    #control for busta... god damnit dude he's a tight end and his name is fuckd up so my code doesn't work
+    #control for busta... name is weird so my code doesn't work
     if "'Busta'_Anderson,_Ro" in players:
         indexOfBusta = players.index("'Busta'_Anderson,_Ro")
         del players[indexOfBusta]
