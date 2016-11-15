@@ -93,9 +93,10 @@ def getPlayerWeeklyStats(name, pos, team):
     url_str = playerURL[0]
     
       
-    #check if they have stats for 2015
+    #check if they have stats for 2016
+    #only seems to work well for current year
     html = urlopen(url_str).read()   
-    if "2015 Gamelog Stats" in html:
+    if "2016 Gamelog Stats" in html:
 
     
         #for test use dion lewis hyperlink
@@ -111,7 +112,7 @@ def getPlayerWeeklyStats(name, pos, team):
         
         if len(tables) > 16: #protect against players that don't have any 2015 stats
         
-            main_table = tables[16]
+            main_table = tables[18] #table 18 contains current year stats
             rows = main_table.findall('.//tr')
             
         
@@ -176,7 +177,7 @@ def getPlayerStatsFromURL(URLs, name, team, pos):
     
     #check if they have stats for 2015
     html = urlopen(url_str).read()   
-    if "2015 Gamelog Stats" in html:
+    if "2016 Gamelog Stats" in html:
         
         parsed = parse(urlopen(url_str))
         page = parsed.getroot()
@@ -185,20 +186,20 @@ def getPlayerStatsFromURL(URLs, name, team, pos):
         #print name
         #print len(tables)    
         
-        if len(tables) > 16: #protect against players that don't have any 2015 stats
+        if len(tables) > 18: #protect against players that don't have any 2015 stats
         
-            main_table = tables[16]
+            main_table = tables[18]
             rows = main_table.findall('.//tr')
             
         
             stats = []    
             
-            for i,row in enumerate(rows[3:]): #rows[3] is first player entry
+            for i,row in enumerate(rows[2:]): #rows[2] is first player entry
                 elements = row.findall('.//td') #find all elements in the row
                 values = [val.text_content() for val in elements] #make a list of all the values from the row
 
                 #insert home or away
-                if len(values[1].split()) == 2:
+                if len(values[1].split()) == 1:
                     values.insert(2,"home")
                 else:
                     values.insert(2,"away")
@@ -246,8 +247,8 @@ def getPlayerStatsFromURL(URLs, name, team, pos):
 def fillMatrixFromDF(df, player):
     
     nflTeams = ["ARI", "ATL", "BAL", "BUF", "CAR", "CHI", "CIN", "CLE", "DAL", "DEN", "DET",
-                "GB", "HOU", "IND", "JAC", "KC", "MIA", "MIN", "NE", "NO", "NYG", "NYJ",
-                "OAK", "PHI", "PIT", "SD", "SEA", "SF", "STL", "TB", "TEN", "WAS"]
+                "GB", "HOU", "IND", "JAC", "KC", "LAR", "MIA", "MIN", "NE", "NO", "NYG", "NYJ",
+                "OAK", "PHI", "PIT", "SD", "SEA", "SF", "TB", "TEN", "WAS"]
 
     playerNames = list(pd.unique(df["player"]))
 
@@ -260,7 +261,7 @@ def fillMatrixFromDF(df, player):
     dfPlayer = df.loc[df["player"] == player]
         
     for opp in opponents:
-        #print opp
+        print opp
         fantasyPoints = dfPlayer.loc[dfPlayer["opp"] == opp]["fantasy_points"]
         
         #print fantasyPoints        

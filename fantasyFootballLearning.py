@@ -35,14 +35,14 @@ from gettingStats import getPlayerStatsFromURL
 from weeklyProj import getWeekProj
 
 import matplotlib.pyplot as plt
-
+from scipy.stats import gaussian_kde
 import time
 
 
 
 
-year = 2015
-weeknumber = 15
+year = 2016
+weeknumber = 10
 pathToSalaries = '/Users/keithlandry/Downloads/'
 pathToSalaries = pathToSalaries + 'FanDuel-NFL-2015-12-20-13996-players-list.csv'
 #FanDuel-NFL-2015-12-13-13913-players-list.csv
@@ -50,8 +50,8 @@ pathToSalaries = pathToSalaries + 'FanDuel-NFL-2015-12-20-13996-players-list.csv
 
 #first step is to get stats and create the matrix 
 
-positions = ['QB','RB','WR','TE','K']
-
+#positions = ['QB','RB','WR','TE','K']
+positions = ['QB']
 predictionsByPos = []
 
 for pos in positions:
@@ -59,7 +59,7 @@ for pos in positions:
     dataFrames = []
     players, teams = getPlayerNames(pos)
     
-    #control for busta... god damnit dude he's a tight end and his name is fuckd up so my code doesn't work
+    #control for busta, name is strange so code doesn't work (he also never plays so just remove)
     if "'Busta'_Anderson,_Ro" in players:
         indexOfBusta = players.index("'Busta'_Anderson,_Ro")
         del players[indexOfBusta]
@@ -81,13 +81,24 @@ for pos in positions:
     
     totalDF = pd.concat(dataFrames, ignore_index = True)
     totalDF = totalDF.convert_objects(convert_numeric = True)
-    
-    #totalDF = totalDF[totalDF.week < 13] #take stats only up to week 12
-    
+    totalDF = totalDF[-totalDF.week.isnull()]
+
+    totalDF = totalDF[totalDF.week < 10] #take stats only up to week 12
+    if pos == 'RB':
+        remPlayers = ['Ronnie_Hillman','Kyle_Juszczyk','Jalston_Fowler','Travaris_Cadet','John_Kuhn','Will_Tukuafu','Michael_Burton']
+        totalDF = totalDF[~totalDF.player.isin(remPlayers)]
+    if pos == 'TE':
+        remPlayers = ['Luke_Stocker','Jermaine_Gresham','Nick_O\'Leary','Luke_Stocker','David_Johnson','David_Johnson','Khari_Lee','Phillip_Supernaw','C.J._Uzomah']    
+        totalDF = totalDF[~totalDF.player.isin(remPlayers)]
+    if pos == 'K':
+        remPlayers = ['Robbie_Gould']
+        totalDF = totalDF[~totalDF.player.isin(remPlayers)]
+
+        
     
     nflTeams = ["ARI", "ATL", "BAL", "BUF", "CAR", "CHI", "CIN", "CLE", "DAL", "DEN", "DET",
-                "GB", "HOU", "IND", "JAC", "KC", "MIA", "MIN", "NE", "NO", "NYG", "NYJ",
-                "OAK", "PHI", "PIT", "SD", "SEA", "SF", "STL", "TB", "TEN", "WAS"]
+                "GB", "HOU", "IND", "JAC", "KC", "LAR", "MIA", "MIN", "NE", "NO", "NYG", "NYJ",
+                "OAK", "PHI", "PIT", "SD", "SEA", "SF", "TB", "TEN", "WAS"]
     
     playerNames = list(pd.unique(totalDF["player"]))
     
@@ -107,7 +118,7 @@ for pos in positions:
     
     R = (playerMatrix!=0)
     
-    #do cv if we want
+    #do cv if we want, now set up to do this automatically
     #playerMatrixTrain, RTrain, cvAns, indForCV = thinMatrix(playerMatrix,R,.15)
     
     num_teams = np.size(R,0)
@@ -123,7 +134,7 @@ for pos in positions:
     
     
     #start bootstrapping
-    nBoot = 100
+    nBoot = 6000
     percOfDataRem = .15
     
     bootT = []
@@ -144,9 +155,8 @@ for pos in positions:
         bootT.append(learnedT)
         bootX.append(learnedX)
      
-        #strange way to add row means allows this to work fo matrix or array
+        #strange way to add row means allows this to work for matrix or array
         predictionb = np.dot(learnedX,learnedT.T)
-     
         bootPred.append(predictionb)
         
     meanPred = mean(bootPred)
@@ -181,6 +191,17 @@ for pos in positions:
     predWithSals = predErrWeek.merge(salaries, on = ["player"])
 
     predictionsByPos.append(predWithSals)
-    
-    
+ 
+B = np.array(bootPred) 
+plyrPreds = B[:,27,4]  
+xpoint = np.linspace(6,24,100)
+kernDen = gaussian_kde(plyrPreds)
+x, y, _ = plt.hist(plyrPreds, facecolor = 'green')
+plt.plot(xpoint, kernDen(xpoint)*max(x)/max(kernDen(xpoint)), 'r-', linewidth = 2.0)
+plt.xlabel('Predicted Fantasy Points')
+plt.title('Tom Brady Week 10 Fantasy Points, N = 1000')
+#plt.savefig('tomBweek10Pred.pdf')
+plt.show()
+
+
 

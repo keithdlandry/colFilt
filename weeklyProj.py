@@ -15,11 +15,13 @@ import itertools
 
 
 
+
 def getWeekProj(df, weekNumber):
 
     #load file containg schedule grid
     #make sure the team nicknames are the same as I use when getting stats from urls
-    fullSched = pd.read_csv("/Users/keithlandry/Desktop/fantasyFootballAnalysis/colFilt/nflSched2015.csv", header = None)
+    #fullSched = pd.read_csv("/Users/keithlandry/Desktop/fantasyFootballAnalysis/colFilt/nflSched2015.csv", header = None)
+    fullSched = pd.read_csv("/Users/keithlandry/Desktop/fantasyFootballAnalysis/colFilt/nflSched2016.csv", header = None, sep = ' ')
 
     weekGames = np.vstack((fullSched[0] , fullSched[weekNumber])).T #stackthe two arrays onto eachother then transpose so it looks like a nice list
     
